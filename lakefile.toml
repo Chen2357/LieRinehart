@@ -1,10 +1,15 @@
-name = "Untitled"
+name = "LieRinehart"
 version = "0.1.0"
-defaultTargets = ["untitled"]
+defaultTargets = ["LieRinehart"]
 
 [[lean_lib]]
-name = "Untitled"
+name = "LieRinehart"
 
-[[lean_exe]]
-name = "untitled"
-root = "Main"
+# [[lean_exe]]
+# name = "LieRinehart"
+# root = "Main"
+
+[[require]]
+name = "mathlib"
+scope = "leanprover-community"
+rev = "v4.24.0"
