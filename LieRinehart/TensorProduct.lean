@@ -1,4 +1,4 @@
-import Sphere.LieRinehart.Basic
+import LieRinehart.Basic
 import Mathlib.LinearAlgebra.TensorProduct.Basic
 
 open TensorProduct

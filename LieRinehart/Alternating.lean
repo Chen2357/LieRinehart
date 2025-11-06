@@ -1,6 +1,6 @@
-import Sphere.LieRinehart.Basic
+import LieRinehart.Basic
 import Mathlib.LinearAlgebra.Alternating.Curry
-import Sphere.LieRinehart.Utilities.Alternating
+import LieRinehart.Utilities.Alternating
 
 open AlternatingMap
 open Function

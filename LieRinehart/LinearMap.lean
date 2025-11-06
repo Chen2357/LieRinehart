@@ -1,4 +1,4 @@
-import Sphere.LieRinehart.Basic
+import LieRinehart.Basic
 
 variable (A L M N : Type*)
 variable [CommRing A] [LieRing L]
