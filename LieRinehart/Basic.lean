@@ -121,6 +121,12 @@ instance (A L : Type*) [CommRing A] [LieRing L] [LRAlgebra A L] : LRModule A L L
     abel
   }
 
+@[simp]
+theorem LRAlgebra.contr_apply {A L : Type*}
+  [CommRing A] [LieRing L] [LRAlgebra A L]
+  (α : L →ₗ[A] A) (x y : L) :
+  contr _ _ _ α x y = -α y • x := rfl
+
 instance (A L : Type*) [CommRing A] [LieRing L] [LieRinehartPair A L] : LieRingModule L A where
   bracket x a := anchor A L x a
   add_lie := by simp
