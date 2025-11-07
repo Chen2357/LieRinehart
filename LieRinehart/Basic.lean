@@ -20,6 +20,7 @@ theorem anchor_lie {A L : Type*}
   anchor A L ⁅x, y⁆ = ⁅anchor A L x, anchor A L y⁆ :=
   LieRinehartPair.anchor_lie x y
 
+-- Perhaps should be LRAlgebra R A L and anchor_smul should be anchor (r • x) a = r • (anchor x a)
 class LRAlgebra (A L : Type*)
   [CommRing A] [LieRing L]
   extends LieRinehartPair A L where
@@ -72,6 +73,20 @@ def contr (A L M : Type*)
   [LRModule A L M] : (L →ₗ[A] A) →ₗ[A] L →ₗ[A] M →ₗ[A] M :=
   LRModule.contr
 
+class LRModule.IsTrivial (A L M : Type*)
+  [CommRing A] [LieRing L] [LRAlgebra A L]
+  [AddCommGroup M] [Module A M] [LieRingModule L M]
+  [LRModule A L M] : Prop where
+  contr_eq_zero : contr (A:=A) (L:=L) (M:=M) = 0
+
+@[simp]
+theorem contr_eq_zero {A L M : Type*}
+  [CommRing A] [LieRing L] [LRAlgebra A L]
+  [AddCommGroup M] [Module A M] [LieRingModule L M]
+  [LRModule A L M] [LRModule.IsTrivial A L M] :
+  contr (A:=A) (L:=L) (M:=M) = 0 :=
+  LRModule.IsTrivial.contr_eq_zero
+
 theorem smul_lier {A L M : Type*}
   [CommRing A] [LieRing L] [LRAlgebra A L]
   [AddCommGroup M] [Module A M] [LieRingModule L M]
@@ -121,6 +136,9 @@ instance (A L : Type*) [CommRing A] [LieRing L] [LRAlgebra A L] : LRModule A L A
   contr := 0
   smul_lier x a m := by
     simp [Bracket.bracket]
+
+instance (A L : Type*) [CommRing A] [LieRing L] [LRAlgebra A L] : LRModule.IsTrivial A L A where
+  contr_eq_zero := rfl
 
 instance (A L : Type*) [CommRing A] [LieRing L] [LieAlgebra A L] : LRAlgebra A L where
   anchor := 0
