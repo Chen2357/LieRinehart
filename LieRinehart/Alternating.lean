@@ -221,7 +221,7 @@ section LRModule
 
 open Finset
 
-variable (A L M N : Type*)
+variable {A L M N : Type*}
 variable [CommRing A] [LieRing L] [LRAlgebra A L]
 variable [AddCommGroup M] [Module A M] [LieRingModule L M] [LRModule A L M]
 variable [AddCommGroup N] [Module A N] [LieRingModule L N] [LRModule A L N]
@@ -264,3 +264,34 @@ instance : LRModule A L (M [⋀^Fin n]→ₗ[A] N) :=
       simp [lie_apply, smul_lier, smul_sub, smul_sum, sum_add_distrib, contr₃, contr₂, contr₁]
       abel
   }
+
+namespace AlternatingMap
+
+@[simp]
+theorem contr_apply_zero (α : L →ₗ[A] A) (x : L) (f : M [⋀^Fin 0]→ₗ[A] N) (v : Fin 0 → M) :
+  contr A L (M [⋀^Fin 0]→ₗ[A] N) α x f v = contr A L N α x (f ![]) := by
+  simp [contr, LRModule.contr]
+  congr
+  apply Subsingleton.elim
+
+theorem contr_apply_succ (α : L →ₗ[A] A) (x : L) (f : M [⋀^Fin (n + 1)]→ₗ[A] N) (v : Fin (n + 1) → M) :
+  contr A L _ α x f v =
+  contr A L _ α x (f.curryLeft (v 0)) (Fin.tail v) - f (update v 0 (contr A L M α x (v 0))) := by
+  induction n
+  case zero =>
+    simp [contr, LRModule.contr, Matrix.vecCons]
+  case succ n ih =>
+    simp [contr, LRModule.contr, Matrix.vecCons]
+    abel_nf
+    rw [←smul_add]
+    congr
+    rw [Fin.sum_univ_succAbove _ 0]
+    abel
+
+theorem contr_apply (α : L →ₗ[A] A) (x : L) (f : M [⋀^Fin n]→ₗ[A] N) (v : Fin n → M) :
+  contr A L _ α x f v =
+  contr A L N α x (f v) - ∑ i : Fin n, f (update v i (contr A L M α x (v i))) := rfl
+
+end AlternatingMap
+
+end LRModule

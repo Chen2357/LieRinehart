@@ -42,7 +42,7 @@ def uncurryLeft'
         rw [heq]
 
 @[simp]
-theorem curryLeft_map_eq_zero
+theorem curryLeft_apply_eq_zero
   (f : M [⋀^Fin (n+1)]→ₗ[R] N) (v : Fin n → M) (i : Fin n) :
   f.curryLeft (v i) v = 0 := by
   have : i.succ ≠ 0 := Fin.succ_ne_zero i
@@ -50,7 +50,7 @@ theorem curryLeft_map_eq_zero
   rfl
 
 @[simp]
-theorem curryLeft_map_tail
+theorem curryLeft_apply_tail
   (f : M [⋀^Fin (n+1)]→ₗ[R] N) (v : Fin (n+1) → M) :
   f.curryLeft (v 0) (Fin.tail v) = f v := by
   simp [Matrix.vecCons]
@@ -78,14 +78,14 @@ theorem eq_of_curryLeft
   (h : ∀ m : M, f.curryLeft m = g.curryLeft m) :
   f = g := by
   ext v
-  rw [←curryLeft_map_tail f v, ←curryLeft_map_tail g v, h (v 0)]
+  rw [←curryLeft_apply_tail f v, ←curryLeft_apply_tail g v, h (v 0)]
 
 theorem eq_zero_of_curryLeft
   (f : M [⋀^Fin (n+1)]→ₗ[R] N)
   (h : ∀ m : M, f.curryLeft m = 0) :
   f = 0 := by
   ext v
-  rw [←curryLeft_map_tail f v, h (v 0)]
+  rw [←curryLeft_apply_tail f v, h (v 0)]
   rfl
 
 end AddCommMonoid
@@ -111,12 +111,12 @@ def uncurryLeft
       intro v i
       cases i using Fin.cases
       case zero =>
-        rw [←curryLeft_map_tail, h]
+        rw [←curryLeft_apply_tail, h]
         simp
       case succ i =>
         apply neg_eq_zero.mp
         have : i.succ ≠ 0 := Fin.succ_ne_zero i
-        rw [←map_swap _ _ this, ←curryLeft_map_tail]
+        rw [←map_swap _ _ this, ←curryLeft_apply_tail]
         simp [-curryLeft_apply_apply, h]
 
 @[simp]
