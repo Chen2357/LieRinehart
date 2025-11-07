@@ -106,6 +106,22 @@ instance (A L : Type*) [CommRing A] [LieRing L] [LRAlgebra A L] : LRModule A L L
     abel
   }
 
+instance (A L : Type*) [CommRing A] [LieRing L] [LieRinehartPair A L] : LieRingModule L A where
+  bracket x a := anchor A L x a
+  add_lie := by simp
+  lie_add := by simp
+  leibniz_lie := by simp [Bracket.bracket]
+
+instance (A L : Type*) [CommRing A] [LieRing L] [LieRinehartPair A L] : NoContrLRModule A L A where
+  lier_smul x a m := by
+    simp [Bracket.bracket]
+    ring
+
+instance (A L : Type*) [CommRing A] [LieRing L] [LRAlgebra A L] : LRModule A L A where
+  contr := 0
+  smul_lier x a m := by
+    simp [Bracket.bracket]
+
 instance (A L : Type*) [CommRing A] [LieRing L] [LieAlgebra A L] : LRAlgebra A L where
   anchor := 0
   anchor_lie := by simp
