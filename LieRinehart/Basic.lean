@@ -45,6 +45,12 @@ def d₀ (A L : Type*)
     map_add' := by intros; ext; simp
   }
 
+@[simp]
+theorem d₀_apply {A L : Type*}
+  [CommRing A] [LieRing L] [LRAlgebra A L]
+  (a : A) (x : L) :
+  d₀ A L a x = anchor A L x a := rfl
+
 class NoContrLRModule (A L M : Type*)
   [CommRing A] [LieRing L] [LieRinehartPair A L]
   [AddCommGroup M] [Module A M] [LieRingModule L M] : Prop where
