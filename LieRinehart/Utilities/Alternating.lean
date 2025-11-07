@@ -146,4 +146,116 @@ theorem curryLeft_uncurryLeft
   ext m v
   simp [uncurryLeft, uncurryLeft', Matrix.vecCons]
 
+open Function
+open Finset
+
+def compLinearMapLeibniz
+  (f : M [⋀^Fin n]→ₗ[R] N)
+  (g : M →ₗ[R] M) :
+  M [⋀^Fin n]→ₗ[R] N := {
+  toFun v := ∑ i : Fin n, f (update v i (g (v i)))
+  map_update_add' := by
+    intros _h m i x y
+    have : (instDecidableEqFin n) = _h := by apply Subsingleton.elim
+    rw [this]
+    rw [←sum_add_distrib]
+    congr
+    ext j
+    by_cases h : i = j
+    . rw [h]
+      simp
+    . simp [Ne.symm h]
+      rw [update_comm h, update_comm h, update_comm h]
+      simp
+  map_update_smul' := by
+    intros _h m i a x
+    have : (instDecidableEqFin n) = _h := by apply Subsingleton.elim
+    rw [this]
+    rw [smul_sum]
+    congr
+    ext j
+    by_cases h : i = j
+    . rw [h]
+      simp
+    . simp [Ne.symm h]
+      rw [update_comm h, update_comm h]
+      simp
+  map_eq_zero_of_eq' := by
+    intros v i j h hij
+    rw [←add_sum_erase (a:=i)]
+    rw [←add_sum_erase (a:=j)]
+    rw [←add_assoc]
+    convert zero_add _
+    . convert map_swap_add f (update v j (g (v j))) hij
+      ext k
+      by_cases hk : k = i
+      . rw [hk, ←h]
+        simp
+        rw [Equiv.swap_apply_left]
+        simp
+      . by_cases hk' : k = j
+        . rw [hk']
+          simp
+          rw [Equiv.swap_apply_right]
+          simp [hij, Ne.symm hij, h]
+        . simp
+          rw [Equiv.swap_apply_of_ne_of_ne hk hk']
+          simp [hk, hk']
+    . symm
+      apply sum_eq_zero
+      intro k hk
+      apply map_eq_zero_of_eq _ _ _ hij
+      have : i ≠ k := by simp at hk; intro heq; rw [heq] at hk; exact hk.2 rfl
+      have : j ≠ k := by simp at hk; intro heq; rw [heq] at hk; exact hk.1 rfl
+      simp [*]
+    simp
+    exact Ne.symm hij
+    simp
+}
+
+@[simp]
+theorem compLinearMapLeibniz_apply
+  (f : M [⋀^Fin n]→ₗ[R] N)
+  (g : M →ₗ[R] M)
+  (v : Fin n → M) :
+  (compLinearMapLeibniz f g) v = ∑ i : Fin n, f (update v i (g (v i))) := rfl
+
+def compLinearMapLeibnizₗ
+  (g : M →ₗ[R] M) :
+  (M [⋀^Fin n]→ₗ[R] N) →ₗ[R] (M [⋀^Fin n]→ₗ[R] N) := {
+  toFun f := compLinearMapLeibniz f g
+  map_add' := by
+    intros
+    ext
+    simp [sum_add_distrib]
+  map_smul' := by
+    intros
+    ext
+    simp [smul_sum]
+}
+
+@[simp]
+theorem compLinearMapLeibnizₗ_apply
+  (f : M [⋀^Fin n]→ₗ[R] N)
+  (g : M →ₗ[R] M) :
+  (compLinearMapLeibnizₗ g) f = compLinearMapLeibniz f g := rfl
+
+def compLinearMapLeibnizLinear : (M →ₗ[R] M) →ₗ[R] (M [⋀^Fin n]→ₗ[R] N) →ₗ[R] (M [⋀^Fin n]→ₗ[R] N) := {
+  toFun g := compLinearMapLeibnizₗ g
+  map_add' := by
+    intros
+    ext
+    simp [sum_add_distrib]
+  map_smul' := by
+    intros
+    ext
+    simp [smul_sum]
+}
+
+@[simp]
+theorem compLinearMapLeibnizLinear_apply
+  (f : M [⋀^Fin n]→ₗ[R] N)
+  (g : M →ₗ[R] M) :
+  (compLinearMapLeibnizLinear g) f = compLinearMapLeibniz f g := rfl
+
 end AddCommGroup
