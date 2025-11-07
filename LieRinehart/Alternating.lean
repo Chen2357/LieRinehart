@@ -5,6 +5,8 @@ import LieRinehart.Utilities.Alternating
 open AlternatingMap
 open Function
 
+section Aux
+
 variable (A L M N : Type*)
 variable [CommRing A] [LieRing L] [LieRinehartPair A L]
 variable [AddCommGroup M] [Module A M] [LieRingModule L M] [NoContrLRModule A L M]
@@ -115,10 +117,16 @@ def lie_aux (n : ℕ) : LieAuxSystem A L M N n := by
   | zero => exact lie_aux_zero A L M N
   | succ n ih => exact lie_aux_succ A L M N n ih
 
+end Aux
+
+section NoContrLRModule
+
 variable {A L M N : Type*}
 variable [CommRing A] [LieRing L] [LieRinehartPair A L]
 variable [AddCommGroup M] [Module A M] [LieRingModule L M] [NoContrLRModule A L M]
 variable [AddCommGroup N] [Module A N] [LieRingModule L N] [NoContrLRModule A L N]
+
+namespace AlternatingMap
 
 def lieAddMonoidHom (n) : L →+ (M [⋀^Fin n]→ₗ[A] N) →+ (M [⋀^Fin n]→ₗ[A] N) := {
   toFun x := {
@@ -205,14 +213,54 @@ instance : NoContrLRModule A L (M [⋀^Fin n]→ₗ[A] N) where
     simp [lie_apply, lier_smul, smul_sub, Finset.smul_sum]
     abel
 
+end AlternatingMap
+
+end NoContrLRModule
+
+section LRModule
+
+open Finset
+
 variable (A L M N : Type*)
 variable [CommRing A] [LieRing L] [LRAlgebra A L]
 variable [AddCommGroup M] [Module A M] [LieRingModule L M] [LRModule A L M]
 variable [AddCommGroup N] [Module A N] [LieRingModule L N] [LRModule A L N]
 
--- instance : LRModule A L (M [⋀^Fin n]→ₗ[A] N) where
-  -- contr α x f := {
-  --   toFun v := contr _ _ _ α x (f v) - ∑ i : Fin n, f (update v i (contr _ _ _ α x (v i)))
-  --   map_add' := by intros; simp; abel
-  --   map_smul' := by intros; simp [smul_sub, Finset.smul_sum]
-  -- }
+instance : LRModule A L (M [⋀^Fin n]→ₗ[A] N) :=
+  let contr₁ (α : L →ₗ[A] A) (x : L) : (M [⋀^Fin n]→ₗ[A] N) →ₗ[A] (M [⋀^Fin n]→ₗ[A] N) := LinearMap.compAlternatingMapₗ A (contr A L N α x) - AlternatingMap.compLinearMapLeibnizₗ (contr A L M α x)
+  let contr₂ (α : L →ₗ[A] A) : L →ₗ[A] (M [⋀^Fin n]→ₗ[A] N) →ₗ[A] (M [⋀^Fin n]→ₗ[A] N) := {
+    toFun x := contr₁ α x
+    map_add' := by
+      intros
+      ext
+      simp [contr₁]
+      abel_nf
+      congr
+      rw [←smul_add, ←sum_add_distrib]
+    map_smul' := by
+      intros
+      ext
+      simp [contr₁, Finset.smul_sum, smul_sub]
+  }
+  let contr₃ : (L →ₗ[A] A) →ₗ[A] L →ₗ[A] (M [⋀^Fin n]→ₗ[A] N) →ₗ[A] (M [⋀^Fin n]→ₗ[A] N) := {
+    toFun α := contr₂ α
+    map_add' := by
+      intros
+      ext
+      simp [contr₂, contr₁]
+      abel_nf
+      congr
+      rw [←smul_add, ←sum_add_distrib]
+    map_smul' := by
+      intros
+      ext
+      simp [contr₂, contr₁, Finset.smul_sum, smul_sub]
+  }
+  {
+    contr := contr₃
+    smul_lier := by
+      intros x a m
+      ext v
+      simp [lie_apply, smul_lier, smul_sub, smul_sum, sum_add_distrib, contr₃, contr₂, contr₁]
+      abel
+  }
