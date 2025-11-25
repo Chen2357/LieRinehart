@@ -1,38 +1,37 @@
 import Mathlib.RingTheory.Derivation.Lie
 
 class LieRinehartPair (A L : Type*) [CommRing A] [LieRing L] extends Module A L where
-  anchor : L →+ Derivation ℤ A A
-  anchor_lie : ∀ (x y : L), anchor ⁅x, y⁆ = ⁅anchor x, anchor y⁆
+  anchor : L →ₗ⁅ℤ⁆ Derivation ℤ A A
   lier_smul (x : L) (a : A) (y : L) :
     ⁅x, a • y⁆ = a • ⁅x, y⁆ + (anchor x a) • y
-
-def anchor (A L) [CommRing A] [LieRing L] [LieRinehartPair A L] : L →+ Derivation ℤ A A :=
-  LieRinehartPair.anchor
 
 -- Also consider make FunLike notation for anchor
 -- @[inherit_doc]
 -- notation "⁅" x ";" a "⁆" => anchor _ _ x a
-
-@[simp]
-theorem anchor_lie {A L : Type*}
-  [CommRing A] [LieRing L] [LieRinehartPair A L]
-  (x y : L) :
-  anchor A L ⁅x, y⁆ = ⁅anchor A L x, anchor A L y⁆ :=
-  LieRinehartPair.anchor_lie x y
+def anchor (A L) [CommRing A] [LieRing L] [LieRinehartPair A L] : L →ₗ⁅ℤ⁆ Derivation ℤ A A :=
+  LieRinehartPair.anchor
 
 -- Perhaps should be LRAlgebra R A L and anchor_smul should be anchor (r • x) a = r • (anchor x a)
 class LRAlgebra (A L : Type*)
   [CommRing A] [LieRing L]
   extends LieRinehartPair A L where
-  anchor_smul : ∀ (x : L) (a b : A),
-    anchor (a • x) b = a • (anchor x b)
+  anchor_smul : ∀ (x : L) (a : A),
+    anchor (a • x) = a • (anchor x)
 
 @[simp]
 theorem anchor_smul {A L : Type*}
   [CommRing A] [LieRing L] [LRAlgebra A L]
-  (x : L) (a b : A) :
-  anchor A L (a • x) b = a • (anchor A L x b) :=
-  LRAlgebra.anchor_smul x a b
+  (x : L) (a : A) :
+  anchor A L (a • x) = a • (anchor A L x) :=
+  LRAlgebra.anchor_smul x a
+
+@[simps]
+def anchorLinearMap (A L : Type*)
+  [CommRing A] [LieRing L] [LRAlgebra A L] :
+  L →ₗ[A] Derivation ℤ A A where
+    toFun x := anchor A L x
+    map_add' := by intros; ext; simp
+    map_smul' := by intros; ext; simp
 
 def d₀ (A L : Type*)
   [CommRing A] [LieRing L] [LRAlgebra A L] : A →+ (L →ₗ[A] A) := {
@@ -154,6 +153,5 @@ instance (A L : Type*) [CommRing A] [LieRing L] [LRAlgebra A L] : LRModule.IsTri
 
 instance (A L : Type*) [CommRing A] [LieRing L] [LieAlgebra A L] : LRAlgebra A L where
   anchor := 0
-  anchor_lie := by simp
   lier_smul := by simp
   anchor_smul := by simp
