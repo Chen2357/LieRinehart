@@ -1,157 +1,157 @@
 import Mathlib.RingTheory.Derivation.Lie
 
-class LieRinehartPair (A L : Type*) [CommRing A] [LieRing L] extends Module A L where
-  anchor : L →ₗ⁅ℤ⁆ Derivation ℤ A A
-  lier_smul (x : L) (a : A) (y : L) :
-    ⁅x, a • y⁆ = a • ⁅x, y⁆ + (anchor x a) • y
+section Defs
 
--- Also consider make FunLike notation for anchor
--- @[inherit_doc]
--- notation "⁅" x ";" a "⁆" => anchor _ _ x a
-def anchor (A L) [CommRing A] [LieRing L] [LieRinehartPair A L] : L →ₗ⁅ℤ⁆ Derivation ℤ A A :=
-  LieRinehartPair.anchor
+variable (R A L M : Type*)
+variable [CommRing R]
+variable [CommRing A] [LieRing L]
+variable [AddCommGroup M] [Module A M] [LieRingModule L M]
 
--- Perhaps should be LRAlgebra R A L and anchor_smul should be anchor (r • x) a = r • (anchor x a)
-class LRAlgebra (A L : Type*)
-  [CommRing A] [LieRing L]
-  extends LieRinehartPair A L where
-  anchor_smul : ∀ (x : L) (a : A),
-    anchor (a • x) = a • (anchor x)
+-- Corresponds to tangent bundle
+class LieRinehartPair extends Module A L, LieRingModule L A where
+  lier_one : ∀ x : L, ⁅x, (1 : A)⁆ = 0
+  lier_mul : ∀ (x : L) (a b : A), ⁅x, a * b⁆ = a * ⁅x, b⁆ + ⁅x, a⁆ * b
+  lier_smul : ∀ (x : L) (a : A) (y : L), ⁅x, a • y⁆ = a • ⁅x, y⁆ + ⁅x, a⁆ • y
+
+-- Corresponds to lift vector bundles (infinitesimal version of vector bundle functors or natural vector bundles)
+class LieRinehartModule [LieRinehartPair A L] : Prop where
+  lier_smul' : ∀ (x : L) (a : A) (m : M), ⁅x, a • m⁆ = a • ⁅x, m⁆ + ⁅x, a⁆ • m
+
+instance[LieRinehartPair A L] : LieRinehartModule A L A where
+  lier_smul' := LieRinehartPair.lier_mul
+
+instance [LieRinehartPair A L] : LieRinehartModule A L L where
+  lier_smul' := LieRinehartPair.lier_smul
+
+-- Corresponds to trivial vector bundles
+class LieRinehartModule.IsTrivial [LieRinehartPair A L] [LieRinehartModule A L M] : Prop where
+  smul_lier : ∀ (x : L) (a : A) (m : M),
+    ⁅a • x, m⁆ = a • ⁅x, m⁆
+
+class LieRinehartRing extends LieRinehartPair A L, LieRinehartModule.IsTrivial A L A
+
+class LieRinehartAlgebra [LieRinehartRing A L] [Algebra R A] [LieAlgebra R L] : Prop
+  extends IsScalarTower R A L, LieModule R L A
+
+def LieRinehartModule.symbol [LieRinehartRing A L] [LieRinehartModule A L M] :
+  L →+ A →+ M →ₗ[A] M := {
+    toFun x := {
+      toFun a := {
+        toFun m := ⁅a • x, m⁆ - a • ⁅x, m⁆
+        map_add' := by intros; simp; abel
+        map_smul' := by intros; simp [lier_smul', IsTrivial.smul_lier, smul_sub, ←smul_assoc]; rw [mul_comm]
+      }
+      map_zero' := by ext; simp
+      map_add' := by intros; ext; simp [add_smul]; abel
+    }
+    map_zero' := by ext; simp
+    map_add' := by intros; ext; simp; abel
+  }
+
+-- This describes the tensor bundles
+class LieRinehartModule.IsLinear [LieRinehartRing A L]
+  [LieRinehartModule A L M] : Prop where
+  symbol_smul (a : A) (x : L) :
+    symbol A L M (a • x) = a • symbol A L M x
+
+instance [LieRinehartRing A L] [LieRinehartModule A L M] [LieRinehartModule.IsTrivial A L M] : LieRinehartModule.IsLinear A L M where
+  symbol_smul := by intros; ext; simp [LieRinehartModule.symbol, LieRinehartModule.IsTrivial.smul_lier]
+
+end Defs
+
+open LieRinehartModule
+
+section LieRinehartPair
+
+variable {A L M : Type*}
+variable [CommRing A] [LieRing L] [LieRinehartPair A L]
+variable [AddCommGroup M] [Module A M] [LieRingModule L M]
+variable [LieRinehartModule A L M]
 
 @[simp]
-theorem anchor_smul {A L : Type*}
-  [CommRing A] [LieRing L] [LRAlgebra A L]
-  (x : L) (a : A) :
-  anchor A L (a • x) = a • (anchor A L x) :=
-  LRAlgebra.anchor_smul x a
+theorem lier_one : ∀ x : L, ⁅x, (1 : A)⁆ = 0 :=
+  LieRinehartPair.lier_one
 
-@[simps]
-def anchorLinearMap (A L : Type*)
-  [CommRing A] [LieRing L] [LRAlgebra A L] :
-  L →ₗ[A] Derivation ℤ A A where
-    toFun x := anchor A L x
-    map_add' := by intros; ext; simp
-    map_smul' := by intros; ext; simp
+theorem lier_smul : ∀ (x : L) (a : A) (m : M), ⁅x, a • m⁆ = a • ⁅x, m⁆ + ⁅x, a⁆ • m :=
+  lier_smul'
 
-def d₀ (A L : Type*)
-  [CommRing A] [LieRing L] [LRAlgebra A L] : A →+ (L →ₗ[A] A) := {
+@[simp]
+theorem trivial_smul_lier [IsTrivial A L M] : ∀ (x : L) (a : A) (m : M), ⁅a • x, m⁆ = a • ⁅x, m⁆ :=
+  IsTrivial.smul_lier
+
+end LieRinehartPair
+
+section LieRinehartRing
+
+variable {R A L M : Type*}
+variable [CommRing R]
+
+variable [CommRing A] [LieRing L] [LieRinehartRing A L]
+variable [Algebra R A] [LieAlgebra R L] [LieRinehartAlgebra R A L]
+
+variable [AddCommGroup M] [Module A M] [LieRingModule L M]
+variable [Module R M] [IsScalarTower R A M] [LieModule R L M]
+
+variable [LieRinehartModule A L M]
+
+@[simp]
+theorem symbol_apply_one (x : L) : symbol A L M x 1 = 0 := by
+  ext; simp [symbol]
+
+theorem symbol_apply_mul (a b : A) (x : L) : symbol A L M x (a * b) = a • symbol A L M x b + symbol A L M (b • x) a := by
+  ext; simp [symbol, smul_smul, smul_sub]
+
+theorem symbol_smul_apply (a b : A) (x : L) : symbol A L M (a • x) b = symbol A L M x (a * b) - b • symbol A L M x a := by
+  rw [mul_comm]
+  simp [symbol_apply_mul]
+
+theorem smul_lier (x : L) (a : A) (m : M) : ⁅a • x, m⁆ = a • ⁅x, m⁆ + symbol A L M x a m := by
+  simp [symbol]
+
+@[simp]
+theorem symbol_apply_smul (r : R) (x : L) (a : A) : symbol A L M x (r • a) = r • symbol A L M x a := by
+  ext m
+  simp [symbol, smul_sub]
+
+@[simp]
+theorem symbol_apply_algebraMap (r : R) (x : L) : symbol A L M x (algebraMap R A r) = 0 := by
+  rw [←mul_one (algebraMap R A r), ←Algebra.smul_def, symbol_apply_smul, symbol_apply_one, smul_zero]
+
+@[simp]
+theorem symbol_eq_zero [IsTrivial A L M] : symbol A L M = 0 := by
+  ext
+  simp [symbol]
+
+@[simp]
+theorem symbol_smul [IsLinear A L M] : ∀ (a : A) (x : L), symbol A L M (a • x) = a • symbol A L M x :=
+  IsLinear.symbol_smul
+
+end LieRinehartRing
+
+variable (R A L M : Type*)
+variable [CommRing R]
+
+variable [CommRing A] [LieRing L] [LieRinehartRing A L]
+variable [Algebra R A] [LieAlgebra R L] [LieRinehartAlgebra R A L]
+
+variable [AddCommGroup M] [Module A M] [LieRingModule L M]
+variable [Module R M] [IsScalarTower R A M] [LieModule R L M]
+
+variable [LieRinehartModule A L M] [IsLinear A L M]
+
+def LieRinehartModule.symbolLinearMap : L →ₗ[A] Derivation R A (M →ₗ[A] M) where
+  toFun x := {
     toFun a := {
-      toFun f := anchor _ _ f a
+      toFun m := symbol A L M x a m
       map_add' := by simp
       map_smul' := by simp
     }
-    map_zero' := by ext; simp
     map_add' := by intros; ext; simp
+    map_smul' := by intros; ext; simp [Algebra.smul_def, symbol_apply_mul]
+    map_one_eq_zero' := by ext; simp
+    leibniz' := by intros; ext; simp [symbol_apply_mul]
   }
+  map_smul' := by intros; ext; simp
+  map_add' := by intros; ext; simp
 
-@[simp]
-theorem d₀_apply {A L : Type*}
-  [CommRing A] [LieRing L] [LRAlgebra A L]
-  (a : A) (x : L) :
-  d₀ A L a x = anchor A L x a := rfl
-
-class NoContrLRModule (A L M : Type*)
-  [CommRing A] [LieRing L] [LieRinehartPair A L]
-  [AddCommGroup M] [Module A M] [LieRingModule L M] : Prop where
-  lier_smul (x : L) (a : A) (m : M) :
-    ⁅x, a • m⁆ = a • ⁅x, m⁆ + (anchor A L x a) • m
-
-theorem lier_smul {A L M : Type*}
-  [CommRing A] [LieRing L] [LieRinehartPair A L]
-  [AddCommGroup M] [Module A M] [LieRingModule L M]
-  [NoContrLRModule A L M]
-  (x : L) (a : A) (m : M) :
-  ⁅x, a • m⁆ = a • ⁅x, m⁆ + (anchor A L x a) • m :=
-  NoContrLRModule.lier_smul x a m
-
-class LRModule (A L M : Type*)
-  [CommRing A] [LieRing L] [LRAlgebra A L]
-  [AddCommGroup M] [Module A M] [LieRingModule L M]
-  extends NoContrLRModule A L M where
-  contr : (L →ₗ[A] A) →ₗ[A] L →ₗ[A] M →ₗ[A] M
-  smul_lier : ∀ (x : L) (a : A) (m : M),
-    ⁅a • x, m⁆ = a • ⁅x, m⁆ + contr (d₀ A L a) x m
-
-def contr (A L M : Type*)
-  [CommRing A] [LieRing L] [LRAlgebra A L]
-  [AddCommGroup M] [Module A M] [LieRingModule L M]
-  [LRModule A L M] : (L →ₗ[A] A) →ₗ[A] L →ₗ[A] M →ₗ[A] M :=
-  LRModule.contr
-
-class LRModule.IsTrivial (A L M : Type*)
-  [CommRing A] [LieRing L] [LRAlgebra A L]
-  [AddCommGroup M] [Module A M] [LieRingModule L M]
-  [LRModule A L M] : Prop where
-  contr_eq_zero : contr (A:=A) (L:=L) (M:=M) = 0
-
-@[simp]
-theorem contr_eq_zero {A L M : Type*}
-  [CommRing A] [LieRing L] [LRAlgebra A L]
-  [AddCommGroup M] [Module A M] [LieRingModule L M]
-  [LRModule A L M] [LRModule.IsTrivial A L M] :
-  contr (A:=A) (L:=L) (M:=M) = 0 :=
-  LRModule.IsTrivial.contr_eq_zero
-
-theorem smul_lier {A L M : Type*}
-  [CommRing A] [LieRing L] [LRAlgebra A L]
-  [AddCommGroup M] [Module A M] [LieRingModule L M]
-  [LRModule A L M]
-  (x : L) (a : A) (m : M) :
-  ⁅a • x, m⁆ = a • ⁅x, m⁆ + contr A L M (d₀ A L a) x m :=
-  LRModule.smul_lier x a m
-
-instance (A L : Type*) [CommRing A] [LieRing L] [LieRinehartPair A L] : NoContrLRModule A L L where
-  lier_smul := LieRinehartPair.lier_smul
-
-instance (A L : Type*) [CommRing A] [LieRing L] [LRAlgebra A L] : LRModule A L L :=
-  let contr' : (L →ₗ[A] A) →ₗ[A] L →ₗ[A] L →ₗ[A] L := {
-    toFun α := {
-      toFun x := {
-        toFun y := -α y • x
-        map_add' := by intros; simp [add_smul]; abel
-        map_smul' := by intros; simp [smul_neg, mul_smul]
-      }
-      map_add' := by intros; ext; simp
-      map_smul' := by intros; ext; simp; rw [smul_comm]
-    }
-    map_add' := by intros; ext; simp [add_smul]; abel
-    map_smul' := by intros; ext; simp [smul_smul]
-  }
-  {
-  contr := contr'
-  smul_lier x a y := by
-    rw [←lie_skew, lier_smul]
-    simp [d₀, contr']
-    conv_lhs => arg 2; rw [←smul_neg, lie_skew]
-    abel
-  }
-
-@[simp]
-theorem LRAlgebra.contr_apply {A L : Type*}
-  [CommRing A] [LieRing L] [LRAlgebra A L]
-  (α : L →ₗ[A] A) (x y : L) :
-  contr _ _ _ α x y = -α y • x := rfl
-
-instance (A L : Type*) [CommRing A] [LieRing L] [LieRinehartPair A L] : LieRingModule L A where
-  bracket x a := anchor A L x a
-  add_lie := by simp
-  lie_add := by simp
-  leibniz_lie := by simp [Bracket.bracket]
-
-instance (A L : Type*) [CommRing A] [LieRing L] [LieRinehartPair A L] : NoContrLRModule A L A where
-  lier_smul x a m := by
-    simp [Bracket.bracket]
-    ring
-
-instance (A L : Type*) [CommRing A] [LieRing L] [LRAlgebra A L] : LRModule A L A where
-  contr := 0
-  smul_lier x a m := by
-    simp [Bracket.bracket]
-
-instance (A L : Type*) [CommRing A] [LieRing L] [LRAlgebra A L] : LRModule.IsTrivial A L A where
-  contr_eq_zero := rfl
-
-instance (A L : Type*) [CommRing A] [LieRing L] [LieAlgebra A L] : LRAlgebra A L where
-  anchor := 0
-  lier_smul := by simp
-  anchor_smul := by simp
+theorem LieRinehartModule.symbolLinearMap_eq_symbol (x : L) (a : A) : symbolLinearMap R A L M x a = symbol A L M x a := rfl

@@ -4,13 +4,14 @@ import LieRinehart.Utilities.Alternating
 
 open AlternatingMap
 open Function
+open LieRinehartModule
 
 section Aux
 
 variable (A L M N : Type*)
 variable [CommRing A] [LieRing L] [LieRinehartPair A L]
-variable [AddCommGroup M] [Module A M] [LieRingModule L M] [NoContrLRModule A L M]
-variable [AddCommGroup N] [Module A N] [LieRingModule L N] [NoContrLRModule A L N]
+variable [AddCommGroup M] [Module A M] [LieRingModule L M] [LieRinehartModule A L M]
+variable [AddCommGroup N] [Module A N] [LieRingModule L N] [LieRinehartModule A L N]
 
 structure LieAuxSystem (n : ℕ) where
   lie : L →+ (M [⋀^Fin n]→ₗ[A] N) →+ (M [⋀^Fin n]→ₗ[A] N)
@@ -19,7 +20,7 @@ structure LieAuxSystem (n : ℕ) where
     | 0 => True
     | _ + 1 => ∀ x y f, (lie y f).curryLeft x + (f.curryLeft ⁅y, x⁆) = lie' y (f.curryLeft x)
   lier_smul : ∀ x (r : A) f,
-    lie x (r • f) = r • lie x f + (anchor _ _ x r) • f
+    lie x (r • f) = r • lie x f + ⁅x, r⁆ • f
 
 @[simp]
 def lie_aux_zero : LieAuxSystem A L M N 0 := {
@@ -119,12 +120,12 @@ def lie_aux (n : ℕ) : LieAuxSystem A L M N n := by
 
 end Aux
 
-section NoContrLRModule
+section LieRinehartPair
 
 variable {A L M N : Type*}
 variable [CommRing A] [LieRing L] [LieRinehartPair A L]
-variable [AddCommGroup M] [Module A M] [LieRingModule L M] [NoContrLRModule A L M]
-variable [AddCommGroup N] [Module A N] [LieRingModule L N] [NoContrLRModule A L N]
+variable [AddCommGroup M] [Module A M] [LieRingModule L M] [LieRinehartModule A L M]
+variable [AddCommGroup N] [Module A N] [LieRingModule L N] [LieRinehartModule A L N]
 
 namespace AlternatingMap
 
@@ -207,91 +208,48 @@ instance : LieRingModule L (M [⋀^Fin n]→ₗ[A] N) where
       rw [ih ((curryLeft a) m)]
       abel
 
-instance : NoContrLRModule A L (M [⋀^Fin n]→ₗ[A] N) where
-  lier_smul x r f := by
+instance : LieRinehartModule A L (M [⋀^Fin n]→ₗ[A] N) where
+  lier_smul' x r f := by
     ext v
     simp [lie_apply, lier_smul, smul_sub, Finset.smul_sum]
     abel
 
 end AlternatingMap
 
-end NoContrLRModule
+end LieRinehartPair
 
-section LRModule
+section LieRinehartRing
 
 open Finset
 
 variable {A L M N : Type*}
-variable [CommRing A] [LieRing L] [LRAlgebra A L]
-variable [AddCommGroup M] [Module A M] [LieRingModule L M] [LRModule A L M]
-variable [AddCommGroup N] [Module A N] [LieRingModule L N] [LRModule A L N]
-
-instance : LRModule A L (M [⋀^Fin n]→ₗ[A] N) :=
-  let contr₁ (α : L →ₗ[A] A) (x : L) : (M [⋀^Fin n]→ₗ[A] N) →ₗ[A] (M [⋀^Fin n]→ₗ[A] N) := LinearMap.compAlternatingMapₗ A (contr A L N α x) - AlternatingMap.compLinearMapLeibnizₗ (contr A L M α x)
-  let contr₂ (α : L →ₗ[A] A) : L →ₗ[A] (M [⋀^Fin n]→ₗ[A] N) →ₗ[A] (M [⋀^Fin n]→ₗ[A] N) := {
-    toFun x := contr₁ α x
-    map_add' := by
-      intros
-      ext
-      simp [contr₁]
-      abel_nf
-      congr
-      rw [←smul_add, ←sum_add_distrib]
-    map_smul' := by
-      intros
-      ext
-      simp [contr₁, Finset.smul_sum, smul_sub]
-  }
-  let contr₃ : (L →ₗ[A] A) →ₗ[A] L →ₗ[A] (M [⋀^Fin n]→ₗ[A] N) →ₗ[A] (M [⋀^Fin n]→ₗ[A] N) := {
-    toFun α := contr₂ α
-    map_add' := by
-      intros
-      ext
-      simp [contr₂, contr₁]
-      abel_nf
-      congr
-      rw [←smul_add, ←sum_add_distrib]
-    map_smul' := by
-      intros
-      ext
-      simp [contr₂, contr₁, Finset.smul_sum, smul_sub]
-  }
-  {
-    contr := contr₃
-    smul_lier := by
-      intros x a m
-      ext v
-      simp [lie_apply, smul_lier, smul_sub, smul_sum, sum_add_distrib, contr₃, contr₂, contr₁]
-      abel
-  }
-
-namespace AlternatingMap
+variable [CommRing A] [LieRing L] [LieRinehartRing A L]
+variable [AddCommGroup M] [Module A M] [LieRingModule L M] [LieRinehartModule A L M]
+variable [AddCommGroup N] [Module A N] [LieRingModule L N] [LieRinehartModule A L N]
 
 @[simp]
-theorem contr_apply_zero (α : L →ₗ[A] A) (x : L) (f : M [⋀^Fin 0]→ₗ[A] N) (v : Fin 0 → M) :
-  contr A L (M [⋀^Fin 0]→ₗ[A] N) α x f v = contr A L N α x (f ![]) := by
-  simp [contr, LRModule.contr]
+theorem LieRinehartModule.symbol_alternating_zero_apply (x : L) (a : A) (f : M [⋀^Fin 0]→ₗ[A] N) (v : Fin 0 → M) : symbol A L (M [⋀^Fin 0]→ₗ[A] N) x a f v = symbol A L N x a (f v) := by
+  simp [symbol]
   congr
-  apply Subsingleton.elim
+  all_goals apply Subsingleton.elim
 
-theorem contr_apply_succ (α : L →ₗ[A] A) (x : L) (f : M [⋀^Fin (n + 1)]→ₗ[A] N) (v : Fin (n + 1) → M) :
-  contr A L _ α x f v =
-  contr A L _ α x (f.curryLeft (v 0)) (Fin.tail v) - f (update v 0 (contr A L M α x (v 0))) := by
-  induction n
-  case zero =>
-    simp [contr, LRModule.contr, Matrix.vecCons]
-  case succ n ih =>
-    simp [contr, LRModule.contr, Matrix.vecCons]
-    abel_nf
-    rw [←smul_add]
-    congr
-    rw [Fin.sum_univ_succAbove _ 0]
-    abel
+@[simp]
+theorem LieRinehartModule.symbol_alternating_curryLeft (x : L) (a : A) (f : M [⋀^Fin (n + 1)]→ₗ[A] N) (v : M) :
+  (symbol A L (M [⋀^Fin (n + 1)]→ₗ[A] N) x a f).curryLeft v = symbol A L (M [⋀^Fin n]→ₗ[A] N) x a (f.curryLeft v) - f.curryLeft (symbol A L M x a v) := by
+  simp [symbol, ←curryLeftLinearMap_apply]
+  simp [smul_sub]
+  abel
 
-theorem contr_apply (α : L →ₗ[A] A) (x : L) (f : M [⋀^Fin n]→ₗ[A] N) (v : Fin n → M) :
-  contr A L _ α x f v =
-  contr A L N α x (f v) - ∑ i : Fin n, f (update v i (contr A L M α x (v i))) := rfl
-
-end AlternatingMap
-
-end LRModule
+instance [IsLinear A L M] [IsLinear A L N] : IsLinear A L (M [⋀^Fin n]→ₗ[A] N) where
+  symbol_smul := by
+    intros a x
+    induction n
+    case zero =>
+      ext
+      simp
+    case succ n ih =>
+      ext1 b
+      ext1 f
+      apply eq_of_curryLeft
+      intro m
+      simp [*, smul_sub]
