@@ -109,7 +109,7 @@ theorem symbol_smul_apply (a b : A) (x : L) : symbol A L M (a • x) b = symbol 
   rw [mul_comm]
   simp [symbol_apply_mul]
 
-theorem smul_lier (x : L) (a : A) (m : M) : ⁅a • x, m⁆ = a • ⁅x, m⁆ + symbol A L M x a m := by
+theorem smul_lier (a : A) (x : L) (m : M) : ⁅a • x, m⁆ = a • ⁅x, m⁆ + symbol A L M x a m := by
   simp [symbol]
 
 @[simp]
