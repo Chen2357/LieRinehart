@@ -72,6 +72,10 @@ variable [LieRinehartModule A L M]
 theorem lier_one : ∀ x : L, ⁅x, (1 : A)⁆ = 0 :=
   LieRinehartPair.lier_one
 
+@[simp]
+theorem lier_mul : ∀ (x : L) (a b : A), ⁅x, a * b⁆ = a * ⁅x, b⁆ + ⁅x, a⁆ * b :=
+  LieRinehartPair.lier_mul
+
 theorem lier_smul : ∀ (x : L) (a : A) (m : M), ⁅x, a • m⁆ = a • ⁅x, m⁆ + ⁅x, a⁆ • m :=
   lier_smul'
 
