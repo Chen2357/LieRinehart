@@ -83,6 +83,12 @@ theorem lier_smul : ∀ (x : L) (a : A) (m : M), ⁅x, a • m⁆ = a • ⁅x, 
 theorem trivial_smul_lier [IsTrivial A L M] : ∀ (x : L) (a : A) (m : M), ⁅a • x, m⁆ = a • ⁅x, m⁆ :=
   IsTrivial.smul_lier
 
+@[simp]
+theorem lieRingSelfModule_smul_lier (a : A) (x y : L) : ⁅a • x, y⁆ = a • ⁅x, y⁆ - ⁅y, a⁆ • x := by
+  rw [←lie_skew, lier_smul, ←lie_skew]
+  simp [-lie_skew]
+  abel
+
 end LieRinehartPair
 
 section LieRinehartRing
@@ -129,6 +135,10 @@ theorem symbol_eq_zero [IsTrivial A L M] : symbol A L M = 0 := by
 @[simp]
 theorem symbol_smul [IsLinear A L M] : ∀ (a : A) (x : L), symbol A L M (a • x) = a • symbol A L M x :=
   IsLinear.symbol_smul
+
+@[simp]
+theorem lieRingSelfModule_smul_lier_symbol_eq (x : L) (a : A) (y : L) : symbol A L L x a y =  -(⁅y, a⁆ • x) := by
+  simp [symbol]
 
 end LieRinehartRing
 
