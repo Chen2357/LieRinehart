@@ -23,23 +23,18 @@ instance[LieRinehartPair A L] : LieRinehartModule A L A where
 instance [LieRinehartPair A L] : LieRinehartModule A L L where
   lier_smul' := LieRinehartPair.lier_smul
 
--- Corresponds to trivial vector bundles
-class LieRinehartModule.IsTrivial [LieRinehartPair A L] [LieRinehartModule A L M] : Prop where
-  smul_lier : ∀ (x : L) (a : A) (m : M),
-    ⁅a • x, m⁆ = a • ⁅x, m⁆
+-- Semilinear modules precisely are those with symbol A-linear in the M argument.
+class LieRinehartModule.IsSemilinear [LieRinehartPair A L] [LieRinehartModule A L M] : Prop where
+  smul_lier_smul : ∀ (a : A) (x : L) (b : A) (m : M),
+    ⁅a • x, b⁆ • m = (a * ⁅x, b⁆) • m
 
-class LieRinehartRing extends LieRinehartPair A L, LieRinehartModule.IsTrivial A L A
-
-class LieRinehartAlgebra [LieRinehartRing A L] [Algebra R A] [LieAlgebra R L] : Prop
-  extends IsScalarTower R A L, LieModule R L A
-
-def LieRinehartModule.symbol [LieRinehartRing A L] [LieRinehartModule A L M] :
+def LieRinehartModule.symbol [LieRinehartPair A L] [LieRinehartModule A L M] [LieRinehartModule.IsSemilinear A L M] :
   L →+ A →+ M →ₗ[A] M := {
     toFun x := {
       toFun a := {
         toFun m := ⁅a • x, m⁆ - a • ⁅x, m⁆
         map_add' := by intros; simp; abel
-        map_smul' := by intros; simp [lier_smul', IsTrivial.smul_lier, smul_sub, ←smul_assoc]; rw [mul_comm]
+        map_smul' := by intros; simp [lier_smul', IsSemilinear.smul_lier_smul, smul_sub, ←smul_assoc, mul_comm a]
       }
       map_zero' := by ext; simp
       map_add' := by intros; ext; simp [add_smul]; abel
@@ -49,19 +44,41 @@ def LieRinehartModule.symbol [LieRinehartRing A L] [LieRinehartModule A L M] :
   }
 
 -- This describes the tensor bundles
-class LieRinehartModule.IsLinear [LieRinehartRing A L]
-  [LieRinehartModule A L M] : Prop where
-  symbol_smul (a : A) (x : L) :
-    symbol A L M (a • x) = a • symbol A L M x
+class LieRinehartModule.IsLinear [LieRinehartPair A L]
+  [LieRinehartModule A L M] : Prop extends IsSemilinear A L M where
+  symbol_smul : ∀ (a : A) (x : L), symbol A L M (a • x) = a • symbol A L M x
 
-instance [LieRinehartRing A L] [LieRinehartModule A L M] [LieRinehartModule.IsTrivial A L M] : LieRinehartModule.IsLinear A L M where
-  symbol_smul := by intros; ext; simp [LieRinehartModule.symbol, LieRinehartModule.IsTrivial.smul_lier]
+-- Corresponds to trivial vector bundles
+class LieRinehartModule.IsTrivial [LieRinehartPair A L] [LieRinehartModule A L M] : Prop where
+  smul_lier : ∀ (x : L) (a : A) (m : M), ⁅a • x, m⁆ = a • ⁅x, m⁆
+
+open LieRinehartModule
+
+instance [LieRinehartPair A L] [LieRinehartModule A L M] [IsTrivial A L M] : IsLinear A L M where
+  smul_lier_smul a x b m := by
+    have := lier_smul' (a • x) b m
+    simp [IsTrivial.smul_lier] at this
+    simp [lier_smul', ←smul_assoc] at this
+    rw [←sub_eq_zero] at this
+    ring_nf at this
+    abel_nf at this
+    simp [←sub_eq_add_neg, sub_eq_zero] at this
+    rw [this]
+  symbol_smul := by intros; ext; simp [LieRinehartModule.symbol, IsTrivial.smul_lier]
+
+instance [LieRinehartPair A L] [IsTrivial A L A] [LieRinehartModule A L M] : IsSemilinear A L M where
+  smul_lier_smul := by
+    intros
+    simp [IsTrivial.smul_lier]
+
+class LieRinehartAlgebra [LieRinehartPair A L] [Algebra R A] [LieAlgebra R L] : Prop
+  extends IsScalarTower R A L, LieModule R L A
 
 end Defs
 
 open LieRinehartModule
 
-section LieRinehartPair
+section LieRinehartModule
 
 variable {A L M : Type*}
 variable [CommRing A] [LieRing L] [LieRinehartPair A L]
@@ -80,6 +97,10 @@ theorem lier_smul : ∀ (x : L) (a : A) (m : M), ⁅x, a • m⁆ = a • ⁅x, 
   lier_smul'
 
 @[simp]
+theorem smul_lier_smul [IsSemilinear A L M] : ∀ (a : A) (x : L) (b : A) (m : M), ⁅a • x, b⁆ • m = (a * ⁅x, b⁆) • m :=
+  IsSemilinear.smul_lier_smul
+
+@[simp]
 theorem trivial_smul_lier [IsTrivial A L M] : ∀ (x : L) (a : A) (m : M), ⁅a • x, m⁆ = a • ⁅x, m⁆ :=
   IsTrivial.smul_lier
 
@@ -89,20 +110,20 @@ theorem lieRingSelfModule_smul_lier (a : A) (x y : L) : ⁅a • x, y⁆ = a •
   simp [-lie_skew]
   abel
 
-end LieRinehartPair
+end LieRinehartModule
 
-section LieRinehartRing
+section IsSemilinear
 
 variable {R A L M : Type*}
 variable [CommRing R]
 
-variable [CommRing A] [LieRing L] [LieRinehartRing A L]
+variable [CommRing A] [LieRing L] [LieRinehartPair A L]
 variable [Algebra R A] [LieAlgebra R L] [LieRinehartAlgebra R A L]
 
 variable [AddCommGroup M] [Module A M] [LieRingModule L M]
 variable [Module R M] [IsScalarTower R A M] [LieModule R L M]
 
-variable [LieRinehartModule A L M]
+variable [LieRinehartModule A L M] [IsSemilinear A L M]
 
 @[simp]
 theorem symbol_apply_one (x : L) : symbol A L M x 1 = 0 := by
@@ -136,16 +157,14 @@ theorem symbol_eq_zero [IsTrivial A L M] : symbol A L M = 0 := by
 theorem symbol_smul [IsLinear A L M] : ∀ (a : A) (x : L), symbol A L M (a • x) = a • symbol A L M x :=
   IsLinear.symbol_smul
 
-@[simp]
-theorem lieRingSelfModule_smul_lier_symbol_eq (x : L) (a : A) (y : L) : symbol A L L x a y =  -(⁅y, a⁆ • x) := by
-  simp [symbol]
+end IsSemilinear
 
-end LieRinehartRing
+section IsLinear
 
 variable (R A L M : Type*)
 variable [CommRing R]
 
-variable [CommRing A] [LieRing L] [LieRinehartRing A L]
+variable [CommRing A] [LieRing L] [LieRinehartPair A L]
 variable [Algebra R A] [LieAlgebra R L] [LieRinehartAlgebra R A L]
 
 variable [AddCommGroup M] [Module A M] [LieRingModule L M]
@@ -169,3 +188,5 @@ def LieRinehartModule.symbolLinearMap : L →ₗ[A] Derivation R A (M →ₗ[A] 
   map_add' := by intros; ext; simp
 
 theorem LieRinehartModule.symbolLinearMap_eq_symbol (x : L) (a : A) : symbolLinearMap R A L M x a = symbol A L M x a := rfl
+
+end IsLinear

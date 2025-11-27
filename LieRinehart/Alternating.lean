@@ -120,8 +120,6 @@ def lie_aux (n : ℕ) : LieAuxSystem A L M N n := by
 
 end Aux
 
-section LieRinehartPair
-
 variable {A L M N : Type*}
 variable [CommRing A] [LieRing L] [LieRinehartPair A L]
 variable [AddCommGroup M] [Module A M] [LieRingModule L M] [LieRinehartModule A L M]
@@ -192,6 +190,8 @@ theorem lie_apply (x : L) (f : M [⋀^Fin n]→ₗ[A] N) (v : Fin n → M) :
         case neg =>
           simp [Ne.symm h, Fin.tail]
 
+end AlternatingMap
+
 instance : LieRingModule L (M [⋀^Fin n]→ₗ[A] N) where
   add_lie x y f := by ext; simp [Bracket.bracket]
   lie_add x f g := by ext; simp [Bracket.bracket]
@@ -209,32 +209,32 @@ instance : LieRingModule L (M [⋀^Fin n]→ₗ[A] N) where
       abel
 
 instance : LieRinehartModule A L (M [⋀^Fin n]→ₗ[A] N) where
-  lier_smul' x r f := by
-    ext v
+  lier_smul':= by
+    intros
+    ext
     simp [lie_apply, lier_smul, smul_sub, Finset.smul_sum]
     abel
 
-end AlternatingMap
+instance [IsSemilinear A L N] : IsSemilinear A L (M [⋀^Fin n]→ₗ[A] N) where
+  smul_lier_smul:= by
+    intros
+    ext
+    simp
 
-end LieRinehartPair
-
-section LieRinehartRing
-
-open Finset
-
-variable {A L M N : Type*}
-variable [CommRing A] [LieRing L] [LieRinehartRing A L]
-variable [AddCommGroup M] [Module A M] [LieRingModule L M] [LieRinehartModule A L M]
-variable [AddCommGroup N] [Module A N] [LieRingModule L N] [LieRinehartModule A L N]
+instance [IsTrivial A L M] [IsTrivial A L N] : IsTrivial A L (M [⋀^Fin n]→ₗ[A] N) where
+  smul_lier := by
+    intros
+    ext
+    simp [lie_apply, smul_sub, Finset.smul_sum]
 
 @[simp]
-theorem LieRinehartModule.symbol_alternating_zero_apply (x : L) (a : A) (f : M [⋀^Fin 0]→ₗ[A] N) (v : Fin 0 → M) : symbol A L (M [⋀^Fin 0]→ₗ[A] N) x a f v = symbol A L N x a (f v) := by
+theorem LieRinehartModule.symbol_alternating_zero_apply [IsSemilinear A L N] (x : L) (a : A) (f : M [⋀^Fin 0]→ₗ[A] N) (v : Fin 0 → M) : symbol A L (M [⋀^Fin 0]→ₗ[A] N) x a f v = symbol A L N x a (f v) := by
   simp [symbol]
   congr
   all_goals apply Subsingleton.elim
 
 @[simp]
-theorem LieRinehartModule.symbol_alternating_curryLeft (x : L) (a : A) (f : M [⋀^Fin (n + 1)]→ₗ[A] N) (v : M) :
+theorem LieRinehartModule.symbol_curryLeft [IsSemilinear A L M] [IsSemilinear A L N] (x : L) (a : A) (f : M [⋀^Fin (n + 1)]→ₗ[A] N) (v : M) :
   (symbol A L (M [⋀^Fin (n + 1)]→ₗ[A] N) x a f).curryLeft v = symbol A L (M [⋀^Fin n]→ₗ[A] N) x a (f.curryLeft v) - f.curryLeft (symbol A L M x a v) := by
   simp [symbol, ←curryLeftLinearMap_apply]
   simp [smul_sub]

@@ -12,7 +12,9 @@ instance : LieRinehartPair A (Derivation R A A) where
   lier_mul := by intros; simp; ring
   lier_smul := by intros; ext; simp [Bracket.bracket]; ring
 
-instance : LieRinehartRing A (Derivation R A A) where
+open LieRinehartModule
+
+instance : IsTrivial A (Derivation R A A) A where
   smul_lier := by simp [Bracket.bracket]
 
 instance : LieRinehartAlgebra R A (Derivation R A A) where
