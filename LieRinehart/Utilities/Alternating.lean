@@ -2,6 +2,21 @@ import Mathlib.LinearAlgebra.Alternating.Curry
 
 namespace AlternatingMap
 
+section IsScalarTower
+
+variable {R : Type*}  [CommSemiring R]
+variable {M : Type*} [AddCommMonoid M]  [Module R M]
+variable {N : Type*}  [AddCommMonoid N] [Module R N]
+variable {ι : Type*}
+variable {S : Type*}  [CommSemiring S] [Algebra S R] [Module S N] [IsScalarTower S R N]
+
+instance : IsScalarTower S R (M [⋀^ι]→ₗ[R] N) where
+  smul_assoc s r f := by
+    ext v
+    simp
+
+end IsScalarTower
+
 section AddCommMonoid
 
 variable {R} [CommSemiring R]
