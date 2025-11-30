@@ -3,8 +3,12 @@ import LieRinehart.Basic
 variable (R A : Type*)
 variable [CommRing R] [CommRing A] [Algebra R A]
 
+instance : Bracket (Derivation R A A) A where
+  bracket D a := D a
+
+@[simp] theorem Derivation.lie_def (D : Derivation R A A) (a : A) : ⁅D, a⁆ = D a := rfl
+
 instance : LieRinehartPair A (Derivation R A A) where
-  bracket x y := x y
   add_lie := by simp
   lie_add := by simp
   leibniz_lie := by simp [Bracket.bracket]
