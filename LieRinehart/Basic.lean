@@ -2,15 +2,17 @@ import Mathlib.RingTheory.Derivation.Lie
 
 section Defs
 
+class LieRinehartRing (L : Type*) [LieRing L] (A : Type*) [CommRing A] extends LieRingModule L A where
+  lier_one : ∀ x : L, ⁅x, (1 : A)⁆ = 0
+  lier_mul : ∀ (x : L) (a b : A), ⁅x, a * b⁆ = a * ⁅x, b⁆ + ⁅x, a⁆ * b
+
 variable (R A L M : Type*)
 variable [CommRing R]
 variable [CommRing A] [LieRing L]
 variable [AddCommGroup M] [Module A M] [LieRingModule L M]
 
 -- Corresponds to tangent bundle
-class LieRinehartPair extends Module A L, LieRingModule L A where
-  lier_one : ∀ x : L, ⁅x, (1 : A)⁆ = 0
-  lier_mul : ∀ (x : L) (a b : A), ⁅x, a * b⁆ = a * ⁅x, b⁆ + ⁅x, a⁆ * b
+class LieRinehartPair extends Module A L, LieRinehartRing L A where
   lier_smul : ∀ (x : L) (a : A) (y : L), ⁅x, a • y⁆ = a • ⁅x, y⁆ + ⁅x, a⁆ • y
 
 -- Corresponds to lift vector bundles (infinitesimal version of vector bundle functors or natural vector bundles)
@@ -18,7 +20,7 @@ class LieRinehartModule [LieRinehartPair A L] : Prop where
   lier_smul' : ∀ (x : L) (a : A) (m : M), ⁅x, a • m⁆ = a • ⁅x, m⁆ + ⁅x, a⁆ • m
 
 instance[LieRinehartPair A L] : LieRinehartModule A L A where
-  lier_smul' := LieRinehartPair.lier_mul
+  lier_smul' := LieRinehartRing.lier_mul
 
 instance [LieRinehartPair A L] : LieRinehartModule A L L where
   lier_smul' := LieRinehartPair.lier_smul
@@ -87,11 +89,11 @@ variable [LieRinehartModule A L M]
 
 @[simp]
 theorem lier_one : ∀ x : L, ⁅x, (1 : A)⁆ = 0 :=
-  LieRinehartPair.lier_one
+  LieRinehartRing.lier_one
 
 @[simp]
 theorem lier_mul : ∀ (x : L) (a b : A), ⁅x, a * b⁆ = a * ⁅x, b⁆ + ⁅x, a⁆ * b :=
-  LieRinehartPair.lier_mul
+  LieRinehartRing.lier_mul
 
 theorem lier_smul : ∀ (x : L) (a : A) (m : M), ⁅x, a • m⁆ = a • ⁅x, m⁆ + ⁅x, a⁆ • m :=
   lier_smul'
