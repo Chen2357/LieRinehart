@@ -82,10 +82,10 @@ open LieRinehartModule
 
 section LieRinehartModule
 
+section
+
 variable {A L M : Type*}
-variable [CommRing A] [LieRing L] [LieRinehartPair A L]
-variable [AddCommGroup M] [Module A M] [LieRingModule L M]
-variable [LieRinehartModule A L M]
+variable [CommRing A] [LieRing L] [LieRinehartRing L A]
 
 @[simp]
 theorem lier_one : ∀ x : L, ⁅x, (1 : A)⁆ = 0 :=
@@ -94,6 +94,13 @@ theorem lier_one : ∀ x : L, ⁅x, (1 : A)⁆ = 0 :=
 @[simp]
 theorem lier_mul : ∀ (x : L) (a b : A), ⁅x, a * b⁆ = a * ⁅x, b⁆ + ⁅x, a⁆ * b :=
   LieRinehartRing.lier_mul
+
+end
+
+variable {A L M : Type*}
+variable [CommRing A] [LieRing L] [LieRinehartPair A L]
+variable [AddCommGroup M] [Module A M] [LieRingModule L M]
+variable [LieRinehartModule A L M]
 
 theorem lier_smul : ∀ (x : L) (a : A) (m : M), ⁅x, a • m⁆ = a • ⁅x, m⁆ + ⁅x, a⁆ • m :=
   lier_smul'
