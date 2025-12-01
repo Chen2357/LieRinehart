@@ -2,7 +2,7 @@ import Mathlib.RingTheory.Derivation.Lie
 
 section Defs
 
-class LieRinehartRing (L : Type*) [LieRing L] (A : Type*) [CommRing A] extends LieRingModule L A where
+class LieRinehartRing (L : Type*) [LieRing L] (A : Type*) [Ring A] extends LieRingModule L A where
   lier_one : ∀ x : L, ⁅x, (1 : A)⁆ = 0
   lier_mul : ∀ (x : L) (a b : A), ⁅x, a * b⁆ = a * ⁅x, b⁆ + ⁅x, a⁆ * b
 
