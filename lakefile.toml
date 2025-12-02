@@ -5,11 +5,7 @@ defaultTargets = ["LieRinehart"]
 [[lean_lib]]
 name = "LieRinehart"
 
-# [[lean_exe]]
-# name = "LieRinehart"
-# root = "Main"
-
 [[require]]
 name = "mathlib"
 scope = "leanprover-community"
-rev = "v4.24.0"
+rev = "v4.25.2"
