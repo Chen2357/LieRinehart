@@ -16,7 +16,7 @@ class LieRinehartPair extends Module A L, LieRinehartRing L A where
   lier_smul : ∀ (x : L) (a : A) (y : L), ⁅x, a • y⁆ = a • ⁅x, y⁆ + ⁅x, a⁆ • y
 
 -- Corresponds to lift vector bundles (infinitesimal version of vector bundle functors or natural vector bundles)
-class LieRinehartModule [LieRinehartPair A L] : Prop where
+class LieRinehartModule [LieRinehartRing L A] : Prop where
   lier_smul' : ∀ (x : L) (a : A) (m : M), ⁅x, a • m⁆ = a • ⁅x, m⁆ + ⁅x, a⁆ • m
 
 instance[LieRinehartPair A L] : LieRinehartModule A L A where
