@@ -6,20 +6,20 @@ class LieRinehartRing (L : Type*) [LieRing L] (A : Type*) [Ring A] extends LieRi
   lier_one : ∀ x : L, ⁅x, (1 : A)⁆ = 0
   lier_mul : ∀ (x : L) (a b : A), ⁅x, a * b⁆ = a * ⁅x, b⁆ + ⁅x, a⁆ * b
 
+-- Corresponds to tangent bundle
+class LieRinehartPair (A L : Type*) [Ring A] [LieRing L] extends Module A L, LieRinehartRing L A where
+  lier_smul : ∀ (x : L) (a : A) (y : L), ⁅x, a • y⁆ = a • ⁅x, y⁆ + ⁅x, a⁆ • y
+
+-- Corresponds to lift vector bundles (infinitesimal version of vector bundle functors or natural vector bundles)
+class LieRinehartModule (A L M : Type*) [Ring A] [LieRing L] [AddCommGroup M] [Module A M] [LieRingModule L M] [LieRinehartRing L A] : Prop where
+  lier_smul' : ∀ (x : L) (a : A) (m : M), ⁅x, a • m⁆ = a • ⁅x, m⁆ + ⁅x, a⁆ • m
+
 variable (R A L M : Type*)
 variable [CommRing R]
 variable [CommRing A] [LieRing L]
 variable [AddCommGroup M] [Module A M] [LieRingModule L M]
 
--- Corresponds to tangent bundle
-class LieRinehartPair extends Module A L, LieRinehartRing L A where
-  lier_smul : ∀ (x : L) (a : A) (y : L), ⁅x, a • y⁆ = a • ⁅x, y⁆ + ⁅x, a⁆ • y
-
--- Corresponds to lift vector bundles (infinitesimal version of vector bundle functors or natural vector bundles)
-class LieRinehartModule [LieRinehartRing L A] : Prop where
-  lier_smul' : ∀ (x : L) (a : A) (m : M), ⁅x, a • m⁆ = a • ⁅x, m⁆ + ⁅x, a⁆ • m
-
-instance[LieRinehartPair A L] : LieRinehartModule A L A where
+instance [LieRinehartPair A L] : LieRinehartModule A L A where
   lier_smul' := LieRinehartRing.lier_mul
 
 instance [LieRinehartPair A L] : LieRinehartModule A L L where
@@ -85,7 +85,7 @@ section LieRinehartModule
 section
 
 variable {A L M : Type*}
-variable [CommRing A] [LieRing L] [LieRinehartRing L A]
+variable [Ring A] [LieRing L] [LieRinehartRing L A]
 
 @[simp]
 theorem lier_one : ∀ x : L, ⁅x, (1 : A)⁆ = 0 :=
@@ -199,3 +199,16 @@ def LieRinehartModule.symbolLinearMap : L →ₗ[A] Derivation R A (M →ₗ[A] 
 theorem LieRinehartModule.symbolLinearMap_eq_symbol (x : L) (a : A) : symbolLinearMap R A L M x a = symbol A L M x a := rfl
 
 end IsLinear
+
+section Ring
+
+variable (A : Type*) [Ring A]
+
+instance : LieRinehartRing A A where
+  lier_one x := by simp [Bracket.bracket]
+  lier_mul x a b := by simp [Bracket.bracket]; noncomm_ring
+
+instance : LieRinehartPair A A where
+  lier_smul x a y := by simp
+
+end Ring
