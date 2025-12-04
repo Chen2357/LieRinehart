@@ -91,7 +91,6 @@ variable [Ring A] [LieRing L] [LieRinehartRing L A]
 theorem lier_one : ∀ x : L, ⁅x, (1 : A)⁆ = 0 :=
   LieRinehartRing.lier_one
 
-@[simp]
 theorem lier_mul : ∀ (x : L) (a b : A), ⁅x, a * b⁆ = a * ⁅x, b⁆ + ⁅x, a⁆ * b :=
   LieRinehartRing.lier_mul
 
@@ -202,13 +201,31 @@ end IsLinear
 
 section Ring
 
-variable (A : Type*) [Ring A]
+variable {R : Type*} [CommRing R]
+variable {A : Type*} [Ring A] [Algebra R A]
 
 instance : LieRinehartRing A A where
   lier_one x := by simp [Bracket.bracket]
   lier_mul x a b := by simp [Bracket.bracket]; noncomm_ring
 
 instance : LieRinehartPair A A where
-  lier_smul x a y := by simp
+  lier_smul x a y := by simp [lier_mul]
+
+@[simp]
+theorem one_lie : ∀ x : A, ⁅(1 : A), x⁆ = 0 := by
+  simp [Bracket.bracket]
+
+theorem mul_lie : ∀ (a b x : A), ⁅a * b, x⁆ = a * ⁅b, x⁆ + ⁅a, x⁆ * b := by
+  intros
+  simp [Bracket.bracket]
+  noncomm_ring
+
+@[simp]
+theorem lie_algebraMap (x : A) (r : R) : ⁅x, algebraMap R A r⁆ = 0 := by
+  simp [Bracket.bracket, Algebra.commutes]
+
+@[simp]
+theorem algebraMap_lie (r : R) (x : A) : ⁅algebraMap R A r, x⁆ = 0 := by
+  simp [Bracket.bracket, Algebra.commutes]
 
 end Ring
